@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Walk Analysis</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell page-shell--analysis">
+    <header class="hero">
+      <div class="hero__brand">
+        <img class="hero__logo" src="BPC-logo-WordMarkWHITEcond.png" alt="BPC logo">
+        <h1>Learning Walk Analysis</h1>
+      </div>
+    </header>
+
+    <main class="analysis-layout">
+      <section class="card">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">Collation</p>
+            <h2>Upload indicator exports</h2>
+          </div>
+          <a class="button button--ghost" href="index.html">Back to walkthrough form</a>
+        </div>
+        <p class="analysis-intro">
+          Upload multiple <code>classroom-learning-walks-indicators.csv</code> files to combine learning
+          walk results across different observers and classes. The dashboard below will aggregate the
+          section data and visualise observed rates for each learning walk section.
+        </p>
+        <label class="field field--stacked">
+          <span>Select one or more indicators CSV files</span>
+          <input id="csv-files" type="file" accept=".csv,text/csv" multiple>
+        </label>
+        <div class="actions actions--compact">
+          <button id="clear-analysis" class="button button--ghost" type="button">Clear uploaded data</button>
+          <button id="download-pdf" class="button button--secondary" type="button">Download PDF report</button>
+        </div>
+        <p id="upload-status" class="analysis-status">No files uploaded yet.</p>
+      </section>
+
+      <section class="card report-meta-card">
+        <div class="section-title">
+          <div>
+            <p class="section-kicker">Report details</p>
+            <h2>PDF report summary</h2>
+          </div>
+        </div>
+        <div id="report-meta" class="report-meta">
+          <p class="empty-state">Upload data to prepare a report summary for PDF export.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <p class="section-kicker">Overview</p>
+            <h2>Combined dataset snapshot</h2>
+          </div>
+        </div>
+        <div id="analysis-stats" class="analysis-stats">
+          <p class="empty-state">Upload indicator CSV files to see overall counts and section summaries.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <p class="section-kicker">Observation evidence</p>
+            <h2>Section performance visualisations</h2>
+          </div>
+        </div>
+        <div id="section-visuals" class="section-visuals">
+          <p class="empty-state">Section charts will appear here after files are uploaded.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <p class="section-kicker">Indicator insights</p>
+            <h2>Most and least observed indicators</h2>
+          </div>
+        </div>
+        <div id="indicator-insights" class="indicator-insights">
+          <p class="empty-state">Upload data to reveal the strongest and weakest indicator trends.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <p class="section-kicker">Reflection trends</p>
+            <h2>Comment pattern analysis</h2>
+          </div>
+        </div>
+        <div id="comment-trends" class="comment-trends">
+          <p class="empty-state">Upload data to analyse repeated themes, phrases, and keywords from walkthrough and practice notes.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <p class="section-kicker">Reflection notes</p>
+            <h2>Walkthrough and practice comments</h2>
+          </div>
+        </div>
+        <div id="reflection-comments" class="reflection-comments">
+          <p class="empty-state">Upload data to view the comments captured in the walkthrough reflection notes and practice-level notes.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="analysis.js"></script>
+</body>
+</html>

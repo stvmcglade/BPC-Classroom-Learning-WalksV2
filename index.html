@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classroom Learning Walks</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero__brand">
+        <img class="hero__logo" src="BPC-logo-WordMarkWHITEcond.png" alt="BPC logo">
+        <div class="hero__content">
+          <h1>Classroom Learning Walks</h1>
+          <p class="hero__focus">
+            First 15 minutes of class to check on entry classroom routines and consistent application
+            of retrieval tasks.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="form-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">Observation form</p>
+            <h2>Walkthrough details</h2>
+          </div>
+          <button id="reset-form" class="button button--ghost" type="button">Reset form</button>
+        </div>
+
+        <form id="walk-form" class="walk-form">
+          <section class="card">
+            <div class="field-grid field-grid--meta">
+              <label class="field">
+                <span>Observer</span>
+                <input id="observer" name="observer" type="text" placeholder="Person completing the walk">
+              </label>
+              <label class="field">
+                <span>Teacher observed</span>
+                <input id="teacher" name="teacher" type="text" placeholder="Teacher name">
+              </label>
+              <label class="field">
+                <span>Date</span>
+                <input id="date" name="date" type="date">
+              </label>
+              <label class="field">
+                <span>Subject</span>
+                <input id="subject" name="subject" type="text" placeholder="Subject area">
+              </label>
+              <label class="field">
+                <span>Lesson segment</span>
+                <select id="lesson-segment" name="lessonSegment">
+                  <option value="Beginning">Beginning</option>
+                  <option value="Middle">Middle</option>
+                  <option value="End">End</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Class</span>
+                <input id="class-name" name="className" type="text" placeholder="Class or year level">
+              </label>
+              <label class="field">
+                <span>Classroom</span>
+                <input id="classroom" name="classroom" type="text" placeholder="Room or space">
+              </label>
+            </div>
+          </section>
+
+          <section class="card" id="practice-sections"></section>
+
+          <section class="card card--notes">
+            <div class="section-title">
+              <div>
+                <p class="section-kicker">Reflection</p>
+                <h3>Walkthrough notes</h3>
+              </div>
+            </div>
+            <label class="field field--stacked">
+              <span>Overall observation notes</span>
+              <textarea
+                id="overall-notes"
+                name="overallNotes"
+                rows="5"
+                placeholder="Capture patterns, strengths, and follow-up actions"
+              ></textarea>
+            </label>
+          </section>
+
+          <section class="card card--notes">
+            <div class="section-title">
+              <div>
+                <p class="section-kicker">CSV delivery</p>
+                <h3>Email the export</h3>
+              </div>
+            </div>
+            <label class="field field--stacked">
+              <span>Send exported CSV to</span>
+              <input
+                id="export-email"
+                name="exportEmail"
+                type="email"
+                placeholder="name@example.com"
+                autocomplete="email"
+              >
+            </label>
+            <p id="export-status" class="export-status" aria-live="polite">
+              Exporting still downloads the CSV. If Google Workspace delivery is configured, the same export will
+              also be emailed and archived in Drive.
+            </p>
+          </section>
+
+          <div class="actions">
+            <button class="button" type="submit">Save walkthrough</button>
+            <button class="button button--ghost" id="export-history" type="button">Export indicators CSV</button>
+            <a class="button button--ghost" href="analysis.html">Analyse CSV files</a>
+          </div>
+        </form>
+      </section>
+
+      <aside class="summary-panel">
+        <section class="card summary-card">
+          <div class="section-title">
+            <div>
+              <p class="section-kicker">Live summary</p>
+              <h2>Implementation snapshot</h2>
+            </div>
+            <span id="completion-badge" class="badge">0% observed</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="stats-grid" class="stats-grid"></div>
+          <div id="section-summary" class="section-summary"></div>
+        </section>
+
+        <section class="card summary-card">
+          <div class="section-title">
+            <div>
+              <p class="section-kicker">Saved records</p>
+              <h2>Observation history</h2>
+            </div>
+            <span id="history-count" class="badge badge--muted">0 saved</span>
+          </div>
+          <div id="history-overview" class="history-overview"></div>
+          <div id="history-list" class="history-list"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <template id="practice-template">
+    <article class="practice-block">
+      <div class="section-title">
+        <div>
+          <p class="section-kicker section-kicker--small">Observation checklist</p>
+          <h3 class="practice-title"></h3>
+        </div>
+        <span class="badge badge--muted practice-score"></span>
+      </div>
+      <div class="practice-items"></div>
+      <label class="field field--stacked">
+        <span>Notes related to this practice</span>
+        <textarea class="practice-notes" rows="3" placeholder="Add evidence or follow-up notes"></textarea>
+      </label>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
