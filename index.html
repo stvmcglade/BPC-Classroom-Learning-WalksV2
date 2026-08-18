@@ -14,8 +14,7 @@
         <div class="hero__content">
           <h1>Classroom Learning Walks</h1>
           <p class="hero__focus">
-            First 15 minutes of class to check on entry classroom routines and consistent application
-            of retrieval tasks.
+            First 15 minutes of class to check on entry classroom routines.
           </p>
         </div>
       </div>
@@ -107,27 +106,88 @@
               >
             </label>
             <p id="export-status" class="export-status" aria-live="polite">
-              Exporting still downloads the CSV. If Google Workspace delivery is configured, the same export will
-              also be emailed and archived in Drive.
+              Export each walkthrough when it is finished. The form does not store walkthroughs on this device.
             </p>
           </section>
 
           <div class="actions">
-            <button class="button" type="submit">Save walkthrough</button>
-            <button class="button button--ghost" id="export-history" type="button">Export indicators CSV</button>
+            <button class="button" id="export-history" type="submit">Export walkthrough CSV</button>
             <a class="button button--ghost" href="analysis.html">Analyse CSV files</a>
           </div>
         </form>
       </section>
 
       <aside class="summary-panel">
+        <section class="card card--timing">
+          <div class="section-title">
+            <div>
+              <p class="section-kicker">Instruction Timing</p>
+              <h3>Teaching mode tracker</h3>
+            </div>
+          </div>
+
+          <div class="mode-definitions" aria-label="Teaching mode definitions">
+            <p><strong>Direct Instruction</strong> - Teacher is instructing to the whole class.</p>
+            <p><strong>Collaborative Instruction</strong> - Teacher is engaging the whole class and actively seeking responses.</p>
+            <p><strong>Independent Work</strong> - Students are working on assigned tasks without teacher involvement.</p>
+            <p><strong>Independent Work / Group Work / Teacher Collaboration</strong> - Students are working independently or in groups while the teacher monitors, conferences, and assists.</p>
+          </div>
+
+          <div class="timing-actions">
+            <button id="observationToggle" class="button button--ghost button--timing button--observation" type="button">Start Observation</button>
+            <button id="directInstructionToggle" class="button button--ghost button--timing button--direct" type="button">Start Direct Instruction</button>
+            <button id="collaborativeInstructionToggle" class="button button--ghost button--timing button--collaborative" type="button">Start Collaborative Instruction</button>
+            <button id="independentWorkToggle" class="button button--ghost button--timing button--independent" type="button">Start Independent Work</button>
+            <button id="collaborationToggle" class="button button--ghost button--timing button--collaboration" type="button">Start Independent Work / Group Work / Teacher Collaboration</button>
+          </div>
+
+          <div class="timing-metrics">
+            <article class="timing-card timing-card--highlight">
+              <p>Observation Time</p>
+              <strong id="observationTime">00:00:00</strong>
+            </article>
+            <article class="timing-card">
+              <p>Direct Instruction</p>
+              <strong id="directInstructionTime">00:00:00</strong>
+              <span id="directInstructionShare" class="metric-detail">0%</span>
+            </article>
+            <article class="timing-card">
+              <p>Collaborative Instruction</p>
+              <strong id="collaborativeInstructionTime">00:00:00</strong>
+              <span id="collaborativeInstructionShare" class="metric-detail">0%</span>
+            </article>
+            <article class="timing-card">
+              <p>Independent Work</p>
+              <strong id="independentWorkTime">00:00:00</strong>
+              <span id="independentWorkShare" class="metric-detail">0%</span>
+            </article>
+            <article class="timing-card">
+              <p>Independent Work / Group Work / Teacher Collaboration</p>
+              <strong id="collaborationTime">00:00:00</strong>
+              <span id="collaborationShare" class="metric-detail">0%</span>
+            </article>
+          </div>
+
+          <div class="timing-progress-track" aria-hidden="true">
+            <span id="instructionProgress" class="timing-progress timing-progress--direct"></span>
+            <span id="collaborativeInstructionProgress" class="timing-progress timing-progress--collaborative"></span>
+            <span id="independentProgress" class="timing-progress timing-progress--independent"></span>
+            <span id="collaborationProgress" class="timing-progress timing-progress--collaboration"></span>
+          </div>
+
+          <div class="timing-meta">
+            <p id="instruction-status" class="timing-copy">All teaching modes are currently paused.</p>
+            <p id="segment-count" class="timing-copy">Direct: 0 | Collaborative: 0 | Independent: 0 | Independent / Group / Teacher Collaboration: 0</p>
+          </div>
+        </section>
+
         <section class="card summary-card">
           <div class="section-title">
             <div>
               <p class="section-kicker">Live summary</p>
-              <h2>Implementation snapshot</h2>
+              <h2>Walkthrough snapshot</h2>
             </div>
-            <span id="completion-badge" class="badge">0% observed</span>
+            <span id="completion-badge" class="badge">Ready to track</span>
           </div>
           <div class="progress-track" aria-hidden="true">
             <div id="progress-fill" class="progress-fill"></div>
@@ -136,17 +196,6 @@
           <div id="section-summary" class="section-summary"></div>
         </section>
 
-        <section class="card summary-card">
-          <div class="section-title">
-            <div>
-              <p class="section-kicker">Saved records</p>
-              <h2>Observation history</h2>
-            </div>
-            <span id="history-count" class="badge badge--muted">0 saved</span>
-          </div>
-          <div id="history-overview" class="history-overview"></div>
-          <div id="history-list" class="history-list"></div>
-        </section>
       </aside>
     </main>
   </div>
@@ -161,8 +210,9 @@
         <span class="badge badge--muted practice-score"></span>
       </div>
       <div class="practice-items"></div>
+      <div class="practice-extra"></div>
       <label class="field field--stacked">
-        <span>Notes related to this practice</span>
+        <span>Notes related to this section</span>
         <textarea class="practice-notes" rows="3" placeholder="Add evidence or follow-up notes"></textarea>
       </label>
     </article>

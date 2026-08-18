@@ -1,7 +1,43 @@
 const PRACTICE_ORDER = [
-  "Setting Up",
-  "Retrieval Task",
-  "Learning Intention and Success Criteria"
+  "Opportunities to Respond"
+];
+const TIMING_MODE_ORDER = [
+  {
+    key: "directInstruction",
+    label: "Direct Instruction",
+    timeField: "directInstructionTime",
+    secondsField: "directInstructionSeconds",
+    shareField: "directInstructionShare",
+    segmentsField: "directInstructionSegments",
+    colorClass: "timing-fill--direct"
+  },
+  {
+    key: "collaborativeInstruction",
+    label: "Collaborative Instruction",
+    timeField: "collaborativeInstructionTime",
+    secondsField: "collaborativeInstructionSeconds",
+    shareField: "collaborativeInstructionShare",
+    segmentsField: "collaborativeInstructionSegments",
+    colorClass: "timing-fill--collaborative"
+  },
+  {
+    key: "independentWork",
+    label: "Independent Work",
+    timeField: "independentWorkTime",
+    secondsField: "independentWorkSeconds",
+    shareField: "independentWorkShare",
+    segmentsField: "independentWorkSegments",
+    colorClass: "timing-fill--independent"
+  },
+  {
+    key: "teacherCollaboration",
+    label: "Independent Work / Group Work / Teacher Collaboration",
+    timeField: "teacherCollaborationTime",
+    secondsField: "teacherCollaborationSeconds",
+    shareField: "teacherCollaborationShare",
+    segmentsField: "teacherCollaborationSegments",
+    colorClass: "timing-fill--collaboration"
+  }
 ];
 const COMMENT_THEME_RULES = [
   {
@@ -141,6 +177,7 @@ const downloadPdfButton = document.querySelector("#download-pdf");
 const uploadStatus = document.querySelector("#upload-status");
 const reportMeta = document.querySelector("#report-meta");
 const analysisStats = document.querySelector("#analysis-stats");
+const timingVisuals = document.querySelector("#timing-visuals");
 const sectionVisuals = document.querySelector("#section-visuals");
 const indicatorInsights = document.querySelector("#indicator-insights");
 const commentTrends = document.querySelector("#comment-trends");
@@ -202,6 +239,7 @@ function buildAnalysis(rows, fileCount) {
   const observerSet = new Set();
   const teacherSet = new Set();
   const walkthroughSet = new Set();
+  const walkthroughTimingMap = new Map();
 
   rows.forEach((row, index) => {
     if (row.observer) {
@@ -215,6 +253,10 @@ function buildAnalysis(rows, fileCount) {
       row.recordId ||
       [row.walkDate, row.observer, row.teacherObserved, row.className, row.sourceFile, index].join("|");
     walkthroughSet.add(walkthroughKey);
+
+    if (!walkthroughTimingMap.has(walkthroughKey)) {
+      walkthroughTimingMap.set(walkthroughKey, buildTimingWalkthroughRecord(row));
+    }
 
     const reflectionNote = (row.reflectionWalkthroughNotes || row.overallNotes || "").trim();
     if (reflectionNote && !commentMap.has(`${walkthroughKey}::reflection`)) {
@@ -313,6 +355,7 @@ function buildAnalysis(rows, fileCount) {
       [a.walkDate, a.observer, a.teacherObserved].join("|")
     )
   );
+  const timing = buildTimingAnalysis(Array.from(walkthroughTimingMap.values()));
 
   return {
     fileCount,
@@ -327,7 +370,8 @@ function buildAnalysis(rows, fileCount) {
     bestIndicators,
     weakestIndicators,
     comments,
-    commentInsights: buildCommentInsights(comments)
+    commentInsights: buildCommentInsights(comments),
+    timing
   };
 }
 
@@ -361,7 +405,8 @@ function renderAnalysis(analysis) {
     { label: "Indicator rows", value: analysis.rowCount },
     { label: "Observed responses", value: analysis.overallObserved },
     { label: "Unticked responses", value: analysis.overallUnticked },
-    { label: "Sections analysed", value: analysis.sectionCount }
+    { label: "Sections analysed", value: analysis.sectionCount },
+    { label: "Timing walkthroughs", value: analysis.timing.walkthroughsWithTiming }
   ]
     .map(
       (stat) => `
@@ -372,6 +417,8 @@ function renderAnalysis(analysis) {
       `
     )
     .join("");
+
+  timingVisuals.innerHTML = renderTimingAnalysis(analysis.timing);
 
   sectionVisuals.innerHTML = analysis.sections
     .map(
@@ -450,6 +497,82 @@ function renderInsightItems(items) {
       `
     )
     .join("");
+}
+
+function renderTimingAnalysis(timing) {
+  if (!timing.walkthroughsWithTiming) {
+    return '<p class="empty-state">No instruction timing data was found in the uploaded files.</p>';
+  }
+
+  return `
+    <div class="timing-visuals__grid">
+      <article class="section-analysis">
+        <div class="section-analysis__header">
+          <div>
+            <h3>Average observation timing</h3>
+            <p class="section-analysis__meta">
+              Based on ${timing.walkthroughsWithTiming} walkthrough${timing.walkthroughsWithTiming === 1 ? "" : "s"} with timing data
+            </p>
+          </div>
+          <span class="section-analysis__score">${escapeHtml(timing.averageObservationTime)}</span>
+        </div>
+        <div class="analysis-stats timing-stats">
+          <article class="stat">
+            <strong>${escapeHtml(timing.averageObservationTime)}</strong>
+            <span>Average observation time</span>
+          </article>
+          <article class="stat">
+            <strong>${escapeHtml(timing.averageTotalSegments)}</strong>
+            <span>Average total segments</span>
+          </article>
+          <article class="stat">
+            <strong>${escapeHtml(timing.totalObservationTime)}</strong>
+            <span>Total observation time</span>
+          </article>
+          <article class="stat">
+            <strong>${escapeHtml(timing.mostCommonActiveMode)}</strong>
+            <span>Most common active mode at export</span>
+          </article>
+        </div>
+      </article>
+      <article class="section-analysis">
+        <div class="section-analysis__header">
+          <div>
+            <h3>Average lesson share by mode</h3>
+            <p class="section-analysis__meta">
+              Each bar shows the average proportion of observation time spent in each teaching mode
+            </p>
+          </div>
+          <span class="section-analysis__score">${timing.totalAverageShare}%</span>
+        </div>
+        <div class="timing-share-track" aria-hidden="true">
+          ${timing.modes
+            .map((mode) => `
+              <span class="timing-share-fill ${mode.colorClass}" style="width:${mode.averageShare}%"></span>
+            `)
+            .join("")}
+        </div>
+        <div class="indicator-chart timing-mode-chart">
+          ${timing.modes
+            .map((mode) => `
+              <article class="indicator-row">
+                <div class="indicator-row__label">
+                  <span class="indicator-row__title">${escapeHtml(mode.label)}</span>
+                  <span class="indicator-row__value">${mode.averageShare}%</span>
+                </div>
+                <div class="indicator-row__track">
+                  <div class="indicator-row__fill ${mode.colorClass}" style="width:${mode.averageShare}%"></div>
+                </div>
+                <p class="timing-mode-meta">
+                  Avg time ${escapeHtml(mode.averageTime)} | Avg segments ${escapeHtml(mode.averageSegments)}
+                </p>
+              </article>
+            `)
+            .join("")}
+        </div>
+      </article>
+    </div>
+  `;
 }
 
 function renderComments(comments) {
@@ -595,6 +718,117 @@ function parseCsv(text) {
   });
 }
 
+function buildTimingWalkthroughRecord(row) {
+  const modeSummaries = TIMING_MODE_ORDER.map((mode) => {
+    const seconds = parseNumber(row[mode.secondsField]);
+    const share = parseNumber(row[mode.shareField]);
+    const segments = parseNumber(row[mode.segmentsField]);
+    return {
+      ...mode,
+      seconds,
+      share,
+      segments
+    };
+  });
+
+  return {
+    observationSeconds: parseNumber(row.observationSeconds),
+    totalTimingSegments: parseNumber(row.totalTimingSegments),
+    activeTeachingMode: row.activeTeachingMode || "",
+    modes: modeSummaries
+  };
+}
+
+function buildTimingAnalysis(walkthroughs) {
+  const withTiming = walkthroughs.filter((walkthrough) =>
+    walkthrough.observationSeconds > 0 ||
+    walkthrough.totalTimingSegments > 0 ||
+    walkthrough.modes.some((mode) => mode.seconds > 0 || mode.share > 0 || mode.segments > 0)
+  );
+
+  if (!withTiming.length) {
+    return {
+      walkthroughsWithTiming: 0,
+      averageObservationTime: "00:00:00",
+      totalObservationTime: "00:00:00",
+      averageTotalSegments: "0.0",
+      totalAverageShare: 0,
+      mostCommonActiveMode: "No timing captured",
+      modes: TIMING_MODE_ORDER.map((mode) => ({
+        label: mode.label,
+        colorClass: mode.colorClass,
+        averageTime: "00:00:00",
+        averageShare: 0,
+        averageSegments: "0.0"
+      }))
+    };
+  }
+
+  const modeTotals = TIMING_MODE_ORDER.map((mode) => ({
+    ...mode,
+    seconds: 0,
+    share: 0,
+    segments: 0
+  }));
+  const activeModeCounts = new Map();
+  let totalObservationSeconds = 0;
+  let totalSegments = 0;
+
+  withTiming.forEach((walkthrough) => {
+    totalObservationSeconds += walkthrough.observationSeconds;
+    totalSegments += walkthrough.totalTimingSegments;
+
+    if (walkthrough.activeTeachingMode) {
+      activeModeCounts.set(
+        walkthrough.activeTeachingMode,
+        (activeModeCounts.get(walkthrough.activeTeachingMode) || 0) + 1
+      );
+    }
+
+    walkthrough.modes.forEach((mode, index) => {
+      modeTotals[index].seconds += mode.seconds;
+      modeTotals[index].share += mode.share;
+      modeTotals[index].segments += mode.segments;
+    });
+  });
+
+  const modes = modeTotals.map((mode) => ({
+    label: mode.label,
+    colorClass: mode.colorClass,
+    averageTime: formatDurationFromSeconds(mode.seconds / withTiming.length),
+    averageShare: Math.round(mode.share / withTiming.length),
+    averageSegments: (mode.segments / withTiming.length).toFixed(1)
+  }));
+
+  return {
+    walkthroughsWithTiming: withTiming.length,
+    averageObservationTime: formatDurationFromSeconds(totalObservationSeconds / withTiming.length),
+    totalObservationTime: formatDurationFromSeconds(totalObservationSeconds),
+    averageTotalSegments: (totalSegments / withTiming.length).toFixed(1),
+    totalAverageShare: modes.reduce((sum, mode) => sum + mode.averageShare, 0),
+    mostCommonActiveMode: findMostCommonLabel(activeModeCounts) || "No active mode recorded",
+    modes
+  };
+}
+
+function parseNumber(value) {
+  const parsed = Number.parseFloat(String(value || "").trim());
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatDurationFromSeconds(totalSeconds) {
+  const safeSeconds = Math.max(0, Math.round(totalSeconds));
+  const hours = String(Math.floor(safeSeconds / 3600)).padStart(2, "0");
+  const minutes = String(Math.floor((safeSeconds % 3600) / 60)).padStart(2, "0");
+  const seconds = String(safeSeconds % 60).padStart(2, "0");
+  return `${hours}:${minutes}:${seconds}`;
+}
+
+function findMostCommonLabel(countMap) {
+  return Array.from(countMap.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || "";
+}
+
 function isObservedRow(row) {
   return String(row.observed).trim() === "1" || String(row.response).trim().toLowerCase() === "ticked";
 }
@@ -696,6 +930,8 @@ function resetAnalysis() {
     '<p class="empty-state">Upload data to prepare a report summary for PDF export.</p>';
   analysisStats.innerHTML =
     '<p class="empty-state">Upload indicator CSV files to see overall counts and section summaries.</p>';
+  timingVisuals.innerHTML =
+    '<p class="empty-state">Upload data to see average instruction timing across walkthroughs.</p>';
   sectionVisuals.innerHTML =
     '<p class="empty-state">Section charts will appear here after files are uploaded.</p>';
   indicatorInsights.innerHTML =
@@ -753,6 +989,7 @@ function buildPdfReport(analysis) {
   const pdf = new SimplePdfDocument({ width: 841.89, height: 595.28 });
 
   renderPdfSummaryPage(pdf, analysis);
+  renderPdfTimingPage(pdf, analysis);
   renderPdfDetailPage(pdf, analysis);
   renderPdfCommentsPages(pdf, analysis);
 
@@ -875,6 +1112,124 @@ function renderPdfDetailPage(pdf, analysis) {
     insightWidth,
     220
   );
+}
+
+function renderPdfTimingPage(pdf, analysis) {
+  pdf.addPage();
+
+  const margin = 28;
+  const pageWidth = pdf.width - margin * 2;
+  let top = 28;
+
+  pdf.drawText("Instruction timing averages", margin, top, {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: [16, 23, 32]
+  });
+  top += 20;
+
+  pdf.drawText(
+    `Timing data captured in ${analysis.timing.walkthroughsWithTiming} of ${analysis.walkthroughCount} walkthroughs`,
+    margin,
+    top,
+    {
+      fontSize: 10,
+      color: [82, 97, 112]
+    }
+  );
+  top += 24;
+
+  const timingOverviewCards = [
+    { label: "Average observation time", value: analysis.timing.averageObservationTime },
+    { label: "Average total segments", value: analysis.timing.averageTotalSegments },
+    { label: "Total observation time", value: analysis.timing.totalObservationTime },
+    { label: "Most common active mode", value: analysis.timing.mostCommonActiveMode }
+  ];
+  top = renderPdfStatGrid(pdf, timingOverviewCards, margin, top, pageWidth, 4, 72);
+  top += 16;
+
+  pdf.drawText("Average share by teaching mode", margin, top, {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: [16, 23, 32]
+  });
+  top += 20;
+
+  const trackX = margin;
+  const trackY = top;
+  const trackWidth = pageWidth;
+  const trackHeight = 18;
+  const timingColors = [
+    [118, 194, 158],
+    [124, 228, 214],
+    [115, 213, 248],
+    [244, 198, 117]
+  ];
+
+  pdf.drawRect(trackX, trackY, trackWidth, trackHeight, {
+    fillColor: [230, 236, 242],
+    strokeColor: [230, 236, 242]
+  });
+
+  let shareCursor = trackX;
+  analysis.timing.modes.forEach((mode, index) => {
+    const barWidth = trackWidth * (mode.averageShare / 100);
+    if (barWidth <= 0) {
+      return;
+    }
+
+    pdf.drawRect(shareCursor, trackY, barWidth, trackHeight, {
+      fillColor: timingColors[index] || [118, 194, 158],
+      strokeColor: timingColors[index] || [118, 194, 158]
+    });
+    shareCursor += barWidth;
+  });
+  top += 34;
+
+  const modeGap = 12;
+  const modeCardWidth = (pageWidth - modeGap) / 2;
+  const modeCardHeight = 96;
+
+  analysis.timing.modes.forEach((mode, index) => {
+    const column = index % 2;
+    const row = Math.floor(index / 2);
+    const cardX = margin + column * (modeCardWidth + modeGap);
+    const cardY = top + row * (modeCardHeight + modeGap);
+
+    pdf.drawRect(cardX, cardY, modeCardWidth, modeCardHeight, {
+      fillColor: [247, 249, 252],
+      strokeColor: [210, 220, 230],
+      lineWidth: 1
+    });
+
+    pdf.drawText(mode.label, cardX + 12, cardY + 14, {
+      fontSize: 10,
+      fontWeight: "bold",
+      color: [16, 23, 32]
+    });
+    pdf.drawText(`${mode.averageShare}%`, cardX + modeCardWidth - 42, cardY + 14, {
+      fontSize: 10,
+      fontWeight: "bold",
+      color: timingColors[index] || [41, 94, 72]
+    });
+    pdf.drawText(`Average time: ${mode.averageTime}`, cardX + 12, cardY + 36, {
+      fontSize: 9,
+      color: [82, 97, 112]
+    });
+    pdf.drawText(`Average segments: ${mode.averageSegments}`, cardX + 12, cardY + 54, {
+      fontSize: 9,
+      color: [82, 97, 112]
+    });
+
+    pdf.drawRect(cardX + 12, cardY + 70, modeCardWidth - 24, 10, {
+      fillColor: [230, 236, 242],
+      strokeColor: [230, 236, 242]
+    });
+    pdf.drawRect(cardX + 12, cardY + 70, (modeCardWidth - 24) * (mode.averageShare / 100), 10, {
+      fillColor: timingColors[index] || [118, 194, 158],
+      strokeColor: timingColors[index] || [118, 194, 158]
+    });
+  });
 }
 
 function renderPdfCommentsPages(pdf, analysis) {

@@ -1,46 +1,30 @@
 const PRACTICES = [
   {
-    id: "setting-up",
-    title: "Setting Up",
+    id: "opportunities-to-respond",
+    title: "Opportunities to Respond",
     items: [
-      "Students wait for the teacher prior to entering the learning space.",
-      "The teacher greets students warmly and respectfully.",
-      "Students know where to sit and move straight to their seats.",
-      "Students have all of their learning materials.",
-      "Students do not attempt to use their laptops to begin the lesson."
-    ]
-  },
-  {
-    id: "retrieval-task",
-    title: "Retrieval Task",
-    items: [
-      "Students are able to complete the retrieval task with minimal prompting from the teacher.",
-      "The retrieval task links with previous knowledge or skills taught.",
-      "The retrieval task is device-free and typically involves students putting pen to paper.",
-      "The teacher scans and circulates the room.",
-      "The teacher reviews students' responses.",
-      "The retrieval task takes no more than ten minutes to complete."
-    ]
-  },
-  {
-    id: "learning-intention",
-    title: "Learning Intention and Success Criteria",
-    items: [
-      "The learning intention is shared and explained with students.",
-      "The success criteria is shared and explained with students."
-    ]
+      "Pair-Share",
+      "Volunteers",
+      "Cold calling non volunteers",
+      "Mini Whiteboards",
+      "Thumbs up/Thumbs down",
+      "Multi choice vote - fingers",
+      "Student initiated question",
+      "Other"
+    ],
+    otherDetailLabel: "If Other was observed, list what it was",
+    otherDetailPlaceholder: "Describe the other opportunity to respond"
   }
 ];
 
 const OBSERVED_VALUE = "Observed";
 const DEFAULT_LESSON_FOCUS =
-  "First 15 minutes of class to check on entry classroom routines and consistent application of retrieval tasks.";
+  "First 15 minutes of class to check on entry classroom routines.";
 
-const STORAGE_KEY = "classroom-learning-walks-records";
 const EXPORT_EMAIL_STORAGE_KEY = "classroom-learning-walks-export-email";
 // Paste the deployed Google Apps Script web app URL here.
 const GOOGLE_APPS_SCRIPT_CONFIG = {
-  webAppUrl: "https://script.google.com/a/macros/buckleyparkco.vic.edu.au/s/AKfycbyB0myv6xy4QeJyeQrSODa2lmNGlKJmTH_uDVD7rG9vthEqv13hmNl5YRSZtNMhC7Y2/exec"
+  webAppUrl: "https://script.google.com/a/macros/buckleyparkco.vic.edu.au/s/AKfycbySfx9JM9C6SQYoOQjKhuD86yNg7o-Vn17kHAVgrLmsi1Vn51p1TBG_nNauMzQOpCVl/exec"
 };
 
 const form = document.querySelector("#walk-form");
@@ -48,41 +32,134 @@ const practiceSections = document.querySelector("#practice-sections");
 const statsGrid = document.querySelector("#stats-grid");
 const sectionSummary = document.querySelector("#section-summary");
 const completionBadge = document.querySelector("#completion-badge");
+const progressTrack = document.querySelector(".progress-track");
 const progressFill = document.querySelector("#progress-fill");
-const historyList = document.querySelector("#history-list");
-const historyCount = document.querySelector("#history-count");
-const historyOverview = document.querySelector("#history-overview");
 const resetButton = document.querySelector("#reset-form");
 const exportHistoryButton = document.querySelector("#export-history");
 const exportEmailInput = document.querySelector("#export-email");
 const exportStatus = document.querySelector("#export-status");
 const practiceTemplate = document.querySelector("#practice-template");
 
-let editingRecordId = null;
-let historyRecords = loadHistory();
+const observationToggle = document.querySelector("#observationToggle");
+const directInstructionToggle = document.querySelector("#directInstructionToggle");
+const collaborativeInstructionToggle = document.querySelector("#collaborativeInstructionToggle");
+const independentWorkToggle = document.querySelector("#independentWorkToggle");
+const collaborationToggle = document.querySelector("#collaborationToggle");
+const observationTime = document.querySelector("#observationTime");
+const directInstructionTime = document.querySelector("#directInstructionTime");
+const collaborativeInstructionTime = document.querySelector("#collaborativeInstructionTime");
+const independentWorkTime = document.querySelector("#independentWorkTime");
+const collaborationTime = document.querySelector("#collaborationTime");
+const directInstructionShare = document.querySelector("#directInstructionShare");
+const collaborativeInstructionShare = document.querySelector("#collaborativeInstructionShare");
+const independentWorkShare = document.querySelector("#independentWorkShare");
+const collaborationShare = document.querySelector("#collaborationShare");
+const instructionStatus = document.querySelector("#instruction-status");
+const segmentCount = document.querySelector("#segment-count");
+const instructionProgress = document.querySelector("#instructionProgress");
+const collaborativeInstructionProgress = document.querySelector("#collaborativeInstructionProgress");
+const independentProgress = document.querySelector("#independentProgress");
+const collaborationProgress = document.querySelector("#collaborationProgress");
+
+const TIMING_MODE_CONFIG = [
+  {
+    key: "direct",
+    label: "Direct Instruction",
+    button: directInstructionToggle,
+    timeEl: directInstructionTime,
+    shareEl: directInstructionShare,
+    progressEl: instructionProgress,
+    timeProp: "directTime",
+    shareProp: "directShare",
+    exactShareProp: "directShareExact",
+    startLabel: "Start Direct Instruction",
+    pauseLabel: "Pause Direct Instruction",
+    runningText: "Direct instruction is running right now."
+  },
+  {
+    key: "collaborativeInstruction",
+    label: "Collaborative Instruction",
+    button: collaborativeInstructionToggle,
+    timeEl: collaborativeInstructionTime,
+    shareEl: collaborativeInstructionShare,
+    progressEl: collaborativeInstructionProgress,
+    timeProp: "collaborativeInstructionTime",
+    shareProp: "collaborativeInstructionShare",
+    exactShareProp: "collaborativeInstructionShareExact",
+    startLabel: "Start Collaborative Instruction",
+    pauseLabel: "Pause Collaborative Instruction",
+    runningText: "Collaborative instruction is running right now."
+  },
+  {
+    key: "independent",
+    label: "Independent Work",
+    button: independentWorkToggle,
+    timeEl: independentWorkTime,
+    shareEl: independentWorkShare,
+    progressEl: independentProgress,
+    timeProp: "independentTime",
+    shareProp: "independentShare",
+    exactShareProp: "independentShareExact",
+    startLabel: "Start Independent Work",
+    pauseLabel: "Pause Independent Work",
+    runningText: "Independent work is running right now."
+  },
+  {
+    key: "collaboration",
+    label: "Independent Work / Group Work / Teacher Collaboration",
+    button: collaborationToggle,
+    timeEl: collaborationTime,
+    shareEl: collaborationShare,
+    progressEl: collaborationProgress,
+    timeProp: "collaborationTime",
+    shareProp: "collaborationShare",
+    exactShareProp: "collaborationShareExact",
+    startLabel: "Start Independent Work / Group Work / Teacher Collaboration",
+    pauseLabel: "Pause Independent Work / Group Work / Teacher Collaboration",
+    runningText: "Independent work / group work / teacher collaboration is running right now."
+  }
+];
+
+let timingState = createDefaultTimingState();
 
 renderPracticeSections();
 loadExportEmailPreference();
-refreshExportStatus();
-updateDashboard();
-renderHistory();
+resetFormState();
 
 form.addEventListener("input", updateDashboard);
 form.addEventListener("submit", handleSave);
 resetButton.addEventListener("click", resetFormState);
-exportHistoryButton.addEventListener("click", exportHistory);
 exportEmailInput.addEventListener("input", handleExportEmailInput);
-historyList.addEventListener("click", handleHistoryAction);
+
+if (observationToggle) {
+  observationToggle.addEventListener("click", toggleObservation);
+}
+
+TIMING_MODE_CONFIG.forEach(({ key, button }) => {
+  if (button) {
+    button.addEventListener("click", () => toggleTimingMode(key));
+  }
+});
+
+window.setInterval(() => {
+  renderTimingState();
+}, 1000);
 
 function renderPracticeSections() {
-  practiceSections.innerHTML = `
-    <div class="section-title">
-      <div>
-        <p class="section-kicker">Identified practices</p>
-        <h3>Observation evidence</h3>
-      </div>
-    </div>
-  `;
+  if (!practiceSections) {
+    return;
+  }
+
+  if (!PRACTICES.length) {
+    practiceSections.remove();
+    return;
+  }
+
+  if (!practiceTemplate) {
+    return;
+  }
+
+  practiceSections.innerHTML = "";
 
   PRACTICES.forEach((practice) => {
     const fragment = practiceTemplate.content.cloneNode(true);
@@ -93,6 +170,7 @@ function renderPracticeSections() {
     fragment.querySelector(".practice-notes").id = `${practice.id}-notes`;
 
     const itemsContainer = fragment.querySelector(".practice-items");
+    const extraContainer = fragment.querySelector(".practice-extra");
 
     practice.items.forEach((prompt, index) => {
       const itemId = `${practice.id}-${index}`;
@@ -116,29 +194,31 @@ function renderPracticeSections() {
       itemsContainer.appendChild(item);
     });
 
+    if (practice.otherDetailLabel && extraContainer) {
+      extraContainer.innerHTML = `
+        <label class="field field--stacked field--section-detail">
+          <span>${practice.otherDetailLabel}</span>
+          <input
+            class="practice-other-detail"
+            id="${practice.id}-other-detail"
+            name="${practice.id}-other-detail"
+            type="text"
+            placeholder="${practice.otherDetailPlaceholder || ""}"
+          >
+        </label>
+      `;
+    }
+
     practiceSections.appendChild(fragment);
   });
 }
 
-function handleSave(event) {
+async function handleSave(event) {
   event.preventDefault();
-
-  const record = collectFormData();
-  const existingIndex = historyRecords.findIndex((item) => item.id === record.id);
-
-  if (existingIndex >= 0) {
-    historyRecords[existingIndex] = record;
-  } else {
-    historyRecords.unshift(record);
-  }
-
-  persistHistory();
-  renderHistory();
-  editingRecordId = record.id;
-  updateDashboard();
+  await exportHistory();
 }
 
-function collectFormData() {
+function collectFormData(now = Date.now()) {
   const formData = new FormData(form);
   const practices = PRACTICES.map((practice) => {
     const items = practice.items.map((_, index) => {
@@ -150,12 +230,13 @@ function collectFormData() {
       id: practice.id,
       title: practice.title,
       items,
-      notes: formData.get(`${practice.id}-notes`) || ""
+      notes: formData.get(`${practice.id}-notes`) || "",
+      otherDetail: formData.get(`${practice.id}-other-detail`) || ""
     };
   });
 
   return {
-    id: editingRecordId || crypto.randomUUID(),
+    id: crypto.randomUUID(),
     savedAt: new Date().toISOString(),
     observer: formData.get("observer") || "",
     teacher: formData.get("teacher") || "",
@@ -166,7 +247,8 @@ function collectFormData() {
     classroom: formData.get("classroom") || "",
     lessonFocus: DEFAULT_LESSON_FOCUS,
     overallNotes: formData.get("overallNotes") || "",
-    practices
+    practices,
+    instructionTiming: getTimingSnapshot(now)
   };
 }
 
@@ -205,8 +287,21 @@ function buildMetrics(practices) {
   return totals;
 }
 
-function updateDashboard() {
-  const data = collectFormData();
+function updateDashboard(now = Date.now()) {
+  if (!statsGrid || !completionBadge || !sectionSummary || !progressFill) {
+    return;
+  }
+
+  if (!PRACTICES.length) {
+    renderTimingSnapshot(now);
+    return;
+  }
+
+  if (progressTrack) {
+    progressTrack.hidden = false;
+  }
+
+  const data = collectFormData(now);
   const metrics = buildMetrics(data.practices);
 
   completionBadge.textContent = metrics.observed
@@ -239,6 +334,37 @@ function updateDashboard() {
   updatePracticeScores(metrics.sections);
 }
 
+function renderTimingSnapshot(now = Date.now()) {
+  const timing = getTimingSnapshot(now);
+
+  if (progressTrack) {
+    progressTrack.hidden = true;
+  }
+
+  progressFill.style.width = "0%";
+  completionBadge.textContent = timing.badgeText;
+
+  statsGrid.innerHTML = [
+    { label: "Observation time", value: timing.observationTime },
+    { label: "Direct instruction", value: `${timing.directShare}%` },
+    { label: "Collaborative instruction", value: `${timing.collaborativeInstructionShare}%` },
+    { label: "Independent work", value: `${timing.independentShare}%` },
+    { label: "Teacher collaboration", value: `${timing.collaborationShare}%` },
+    { label: "Total segments", value: timing.totalSegments }
+  ].map((stat) => `
+    <article class="stat">
+      <strong>${escapeHtml(String(stat.value))}</strong>
+      <span>${escapeHtml(stat.label)}</span>
+    </article>
+  `).join("");
+
+  sectionSummary.innerHTML = `
+    <p class="empty-state">
+      ${escapeHtml(timing.statusText)} ${escapeHtml(timing.segmentSummary)}
+    </p>
+  `;
+}
+
 function updatePracticeScores(sectionMetrics) {
   sectionMetrics.forEach((section) => {
     const score = document.querySelector(`[data-practice-id="${section.id}"] .practice-score`);
@@ -246,19 +372,6 @@ function updatePracticeScores(sectionMetrics) {
       score.textContent = `${section.observed} of ${section.total} ticked`;
     }
   });
-}
-
-function loadHistory() {
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    return [];
-  }
-}
-
-function persistHistory() {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(historyRecords));
 }
 
 function loadExportEmailPreference() {
@@ -281,153 +394,12 @@ function persistExportEmailPreference(value) {
   }
 }
 
-function renderHistory() {
-  historyCount.textContent = `${historyRecords.length} saved`;
-  renderHistoryOverview();
-
-  if (!historyRecords.length) {
-    historyList.innerHTML = `
-      <p class="empty-state">
-        Saved walkthroughs will appear here. Records stay in this browser so leaders can revisit
-        observations and export them later.
-      </p>
-    `;
-    return;
-  }
-
-  historyList.innerHTML = historyRecords.map((record) => {
-    const metrics = buildMetrics(record.practices);
-    return `
-      <article class="history-item">
-        <h4>${escapeHtml(record.teacher || "Unnamed walkthrough")}</h4>
-        <p class="history-meta">
-          ${escapeHtml(record.observer || "No observer")} | ${escapeHtml(record.date || "No date")} |
-          ${escapeHtml(record.subject || "No subject")} |
-          ${escapeHtml(record.className || "No class")}<br>
-          ${metrics.percent}% observed
-        </p>
-        <div class="history-actions">
-          <button class="history-button" type="button" data-action="load" data-id="${record.id}">Open</button>
-          <button class="history-button" type="button" data-action="delete" data-id="${record.id}">Delete</button>
-        </div>
-      </article>
-    `;
-  }).join("");
-}
-
-function renderHistoryOverview() {
-  if (!historyRecords.length) {
-    historyOverview.innerHTML = "";
-    return;
-  }
-
-  const practiceScores = PRACTICES.map((practice) => ({
-    title: practice.title,
-    earned: 0,
-    eligible: 0
-  }));
-
-  let totalPercent = 0;
-
-  historyRecords.forEach((record) => {
-    const metrics = buildMetrics(record.practices);
-    totalPercent += metrics.percent;
-
-    record.practices.forEach((practice, practiceIndex) => {
-      practice.items.forEach((value) => {
-        practiceScores[practiceIndex].eligible += 1;
-        if (isObserved(value)) {
-          practiceScores[practiceIndex].earned += 1;
-        }
-      });
-    });
-  });
-
-  const averagePercent = Math.round(totalPercent / historyRecords.length);
-  const bestPractice = practiceScores
-    .map((practice) => ({
-      ...practice,
-      percent: practice.eligible ? Math.round((practice.earned / practice.eligible) * 100) : 0
-    }))
-    .sort((a, b) => b.percent - a.percent)[0];
-
-  historyOverview.innerHTML = `
-    <article class="stat">
-      <strong>${historyRecords.length}</strong>
-      <span>Total walkthroughs recorded</span>
-    </article>
-    <article class="stat">
-      <strong>${averagePercent}%</strong>
-      <span>Average observed score</span>
-    </article>
-    <article class="stat">
-      <strong>${bestPractice ? bestPractice.percent : 0}%</strong>
-      <span>Strongest trend: ${bestPractice ? bestPractice.title : "No trend yet"}</span>
-    </article>
-  `;
-}
-
-function handleHistoryAction(event) {
-  const button = event.target.closest("[data-action]");
-  if (!button) {
-    return;
-  }
-
-  const { action, id } = button.dataset;
-  const record = historyRecords.find((item) => item.id === id);
-
-  if (!record) {
-    return;
-  }
-
-  if (action === "load") {
-    fillForm(record);
-  }
-
-  if (action === "delete") {
-    historyRecords = historyRecords.filter((item) => item.id !== id);
-    if (editingRecordId === id) {
-      resetFormState();
-    }
-    persistHistory();
-    renderHistory();
-    updateDashboard();
-  }
-}
-
-function fillForm(record) {
-  editingRecordId = record.id;
-  document.querySelector("#observer").value = record.observer || "";
-  document.querySelector("#teacher").value = record.teacher;
-  document.querySelector("#date").value = record.date;
-  document.querySelector("#subject").value = record.subject;
-  document.querySelector("#lesson-segment").value = record.lessonSegment;
-  document.querySelector("#class-name").value = record.className;
-  document.querySelector("#classroom").value = record.classroom;
-  document.querySelector("#overall-notes").value = record.overallNotes;
-
-  record.practices.forEach((practice) => {
-    practice.items.forEach((value, index) => {
-      const checkbox = document.querySelector(`#${practice.id}-${index}`);
-      if (checkbox) {
-        checkbox.checked = isObserved(value);
-      }
-    });
-    const notesField = document.querySelector(`#${practice.id}-notes`);
-    if (notesField) {
-      notesField.value = practice.notes;
-    }
-  });
-
-  updateDashboard();
-}
-
 function resetFormState() {
-  editingRecordId = null;
   form.reset();
   document.querySelector("#date").value = new Date().toISOString().slice(0, 10);
   document.querySelector("#lesson-segment").value = "Beginning";
   loadExportEmailPreference();
+  resetTimingState(true);
   refreshExportStatus();
 
   PRACTICES.forEach((practice) => {
@@ -435,20 +407,27 @@ function resetFormState() {
     if (notesField) {
       notesField.value = "";
     }
+
+    const otherDetailField = document.querySelector(`#${practice.id}-other-detail`);
+    if (otherDetailField) {
+      otherDetailField.value = "";
+    }
   });
 
-  updateDashboard();
+  renderTimingState();
 }
 
 async function exportHistory() {
-  if (!historyRecords.length) {
-    flashExportButton("No saved data", 1600);
-    setExportStatus("Save at least one walkthrough before exporting a CSV.", "error");
+  const now = Date.now();
+  const record = collectFormData(now);
+  if (!hasWalkthroughData(record)) {
+    flashExportButton("Nothing to export", 1600);
+    setExportStatus("Complete at least one walkthrough field or timing segment before exporting a CSV.", "error");
     return;
   }
 
-  const detailRows = historyRecords.flatMap((record) => buildIndicatorExportRows(record));
-  const csvContent = buildCsv(detailRows);
+  const detailRows = buildIndicatorExportRows(record);
+  const csvContent = buildCsv(detailRows.length ? detailRows : [buildWalkthroughSummaryRow(record)]);
   const recipientEmail = exportEmailInput.value.trim();
   const filename = "classroom-learning-walks-indicators.csv";
 
@@ -460,8 +439,9 @@ async function exportHistory() {
 
   if (!recipientEmail) {
     flashExportButton("CSV downloaded", 1800);
+    resetFormState();
     setExportStatus(
-      "CSV downloaded. Add an email address above if you also want the export sent through Gmail and archived in Drive.",
+      "CSV downloaded and the form has been cleared. Add an email address above if you also want the export sent through Gmail and archived in Drive.",
       ""
     );
     return;
@@ -475,8 +455,9 @@ async function exportHistory() {
 
   if (!isEmailDeliveryConfigured()) {
     flashExportButton("CSV downloaded", 1800);
+    resetFormState();
     setExportStatus(
-      "CSV downloaded. Google Workspace delivery is ready in the app, but you still need to deploy the Apps Script web app and paste its URL into app.js before it can send.",
+      "CSV downloaded and the form has been cleared. Google Workspace delivery is ready in the app, but you still need to deploy the Apps Script web app and paste its URL into app.js before it can send.",
       "error"
     );
     return;
@@ -492,12 +473,13 @@ async function exportHistory() {
       csvContent,
       filename,
       recipientEmail,
-      recordCount: historyRecords.length
+      recordCount: 1
     });
 
     flashExportButton("CSV sent", 2200);
+    resetFormState();
     setExportStatus(
-      `CSV downloaded. Check the Google confirmation window for the final success message and Drive link for ${recipientEmail}.`,
+      `CSV downloaded and the form has been cleared. Check the Google confirmation window for the final success message and Drive link for ${recipientEmail}.`,
       "success"
     );
   } catch (error) {
@@ -522,20 +504,77 @@ function isObserved(value) {
   return value === OBSERVED_VALUE;
 }
 
+function hasWalkthroughData(record) {
+  const hasMetaData = [
+    record.observer,
+    record.teacher,
+    record.date,
+    record.subject,
+    record.className,
+    record.classroom,
+    record.overallNotes
+  ].some((value) => Boolean(String(value || "").trim()));
+
+  const hasPracticeData = record.practices.some((practice) =>
+    practice.notes.trim() ||
+    practice.otherDetail.trim() ||
+    practice.items.some((value) => isObserved(value))
+  );
+
+  const hasTimingData =
+    record.instructionTiming.observationMs > 0 ||
+    record.instructionTiming.totalSegments > 0;
+
+  return hasMetaData || hasPracticeData || hasTimingData;
+}
+
+function buildExportBaseRow(record) {
+  const timing = record.instructionTiming;
+
+  return {
+    recordId: record.id,
+    savedAt: record.savedAt || "",
+    walkDate: record.date || "",
+    observer: record.observer || "",
+    teacherObserved: record.teacher || "",
+    subject: record.subject || "",
+    lessonSegment: record.lessonSegment || "",
+    className: record.className || "",
+    classroom: record.classroom || "",
+    lessonFocus: record.lessonFocus || "",
+    observationTime: timing.observationTime,
+    observationSeconds: timing.observationSeconds,
+    activeTeachingMode: timing.activeModeLabel,
+    instructionStatus: timing.statusText,
+    directInstructionTime: timing.directTime,
+    directInstructionSeconds: timing.directSeconds,
+    directInstructionShare: timing.directShare,
+    directInstructionSegments: timing.directSegments,
+    collaborativeInstructionTime: timing.collaborativeInstructionTime,
+    collaborativeInstructionSeconds: timing.collaborativeInstructionSeconds,
+    collaborativeInstructionShare: timing.collaborativeInstructionShare,
+    collaborativeInstructionSegments: timing.collaborativeInstructionSegments,
+    independentWorkTime: timing.independentTime,
+    independentWorkSeconds: timing.independentSeconds,
+    independentWorkShare: timing.independentShare,
+    independentWorkSegments: timing.independentSegments,
+    teacherCollaborationTime: timing.collaborationTime,
+    teacherCollaborationSeconds: timing.collaborationSeconds,
+    teacherCollaborationShare: timing.collaborationShare,
+    teacherCollaborationSegments: timing.collaborationSegments,
+    totalTimingSegments: timing.totalSegments,
+    overallNotes: record.overallNotes || "",
+    reflectionWalkthroughNotes: record.overallNotes || ""
+  };
+}
+
 function buildIndicatorExportRows(record) {
+  const baseRow = buildExportBaseRow(record);
+
   return record.practices.flatMap((practice) => {
     const practiceDefinition = PRACTICES.find((item) => item.id === practice.id);
     return practice.items.map((value, index) => ({
-      recordId: record.id,
-      savedAt: record.savedAt || "",
-      walkDate: record.date || "",
-      observer: record.observer || "",
-      teacherObserved: record.teacher || "",
-      subject: record.subject || "",
-      lessonSegment: record.lessonSegment || "",
-      className: record.className || "",
-      classroom: record.classroom || "",
-      lessonFocus: record.lessonFocus || "",
+      ...baseRow,
       practiceId: practice.id,
       practiceTitle: practice.title,
       indicatorNumber: index + 1,
@@ -543,10 +582,27 @@ function buildIndicatorExportRows(record) {
       observed: isObserved(value) ? 1 : 0,
       response: isObserved(value) ? "Ticked" : "Unticked",
       practiceNotes: practice.notes || "",
-      overallNotes: record.overallNotes || "",
-      reflectionWalkthroughNotes: record.overallNotes || ""
+      practiceOtherDetail: practice.otherDetail || ""
     }));
   });
+}
+
+function buildWalkthroughSummaryRow(record) {
+  return {
+    ...buildExportBaseRow(record),
+    practiceId: "",
+    practiceTitle: "",
+    indicatorNumber: "",
+    indicatorText: "",
+    observed: "",
+    response: "",
+    practiceNotes: "",
+    practiceOtherDetail: record.practices
+      .map((practice) => practice.otherDetail || "")
+      .filter(Boolean)
+      .join(" | "),
+    exportType: "Walkthrough summary"
+  };
 }
 
 function buildCsv(rows) {
@@ -588,7 +644,7 @@ function refreshExportStatus() {
 
   if (!value) {
     setExportStatus(
-      "Exporting still downloads the CSV. If Google Workspace delivery is configured, the same export will also be emailed and archived in Drive.",
+      "Export each walkthrough when it is finished. The form does not store walkthroughs on this device.",
       ""
     );
     return;
@@ -596,7 +652,7 @@ function refreshExportStatus() {
 
   if (isValidEmail(value)) {
     setExportStatus(
-      "The next export will download the CSV, then open a Google confirmation window to email it and save a copy to Drive.",
+      "The next export will download the current walkthrough CSV, then open a Google confirmation window to email it and save a copy to Drive.",
       ""
     );
     return;
@@ -692,7 +748,7 @@ function setExportStatus(message, tone) {
 function flashExportButton(label, duration) {
   exportHistoryButton.textContent = label;
   window.setTimeout(() => {
-    exportHistoryButton.textContent = "Export indicators CSV";
+    exportHistoryButton.textContent = "Export walkthrough CSV";
   }, duration);
 }
 
@@ -706,4 +762,250 @@ function downloadFile(content, filename, mimeType) {
   URL.revokeObjectURL(url);
 }
 
-resetFormState();
+function createDefaultTimingState() {
+  return {
+    observation: {
+      running: false,
+      startedAt: null,
+      elapsedMs: 0
+    },
+    modes: {
+      direct: createDefaultTimingBucket(),
+      collaborativeInstruction: createDefaultTimingBucket(),
+      independent: createDefaultTimingBucket(),
+      collaboration: createDefaultTimingBucket()
+    }
+  };
+}
+
+function createDefaultTimingBucket() {
+  return {
+    running: false,
+    startedAt: null,
+    elapsedMs: 0,
+    segments: 0
+  };
+}
+
+function resetTimingState(skipRender = false) {
+  timingState = createDefaultTimingState();
+  if (!skipRender) {
+    renderTimingState();
+  }
+}
+
+function formatDuration(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return `${hours}:${minutes}:${seconds}`;
+}
+
+function calculateElapsed(bucket, now = Date.now()) {
+  if (!bucket.running || !bucket.startedAt) {
+    return bucket.elapsedMs;
+  }
+
+  return bucket.elapsedMs + (now - bucket.startedAt);
+}
+
+function getObservationElapsed(now = Date.now()) {
+  return calculateElapsed(timingState.observation, now);
+}
+
+function getModeElapsed(key, now = Date.now()) {
+  return calculateElapsed(timingState.modes[key], now);
+}
+
+function pauseBucket(bucket, now = Date.now()) {
+  bucket.elapsedMs = calculateElapsed(bucket, now);
+  bucket.running = false;
+  bucket.startedAt = null;
+}
+
+function pauseObservation(now = Date.now()) {
+  pauseBucket(timingState.observation, now);
+}
+
+function pauseTimingMode(key, now = Date.now()) {
+  pauseBucket(timingState.modes[key], now);
+}
+
+function pauseAllTimingModes(now = Date.now(), exceptKey = "") {
+  TIMING_MODE_CONFIG.forEach(({ key }) => {
+    if (key !== exceptKey && timingState.modes[key].running) {
+      pauseTimingMode(key, now);
+    }
+  });
+}
+
+function toggleObservation() {
+  const now = Date.now();
+
+  if (timingState.observation.running) {
+    pauseObservation(now);
+    pauseAllTimingModes(now);
+  } else {
+    timingState.observation.running = true;
+    timingState.observation.startedAt = now;
+  }
+
+  renderTimingState(now);
+}
+
+function toggleTimingMode(key) {
+  const now = Date.now();
+  const bucket = timingState.modes[key];
+
+  if (!timingState.observation.running) {
+    timingState.observation.running = true;
+    timingState.observation.startedAt = now;
+  }
+
+  if (bucket.running) {
+    pauseTimingMode(key, now);
+  } else {
+    pauseAllTimingModes(now, key);
+    bucket.running = true;
+    bucket.startedAt = now;
+    bucket.segments += 1;
+  }
+
+  renderTimingState(now);
+}
+
+function getTimingSnapshot(now = Date.now()) {
+  const observationMs = getObservationElapsed(now);
+  const directMs = getModeElapsed("direct", now);
+  const collaborativeInstructionMs = getModeElapsed("collaborativeInstruction", now);
+  const independentMs = getModeElapsed("independent", now);
+  const collaborationMs = getModeElapsed("collaboration", now);
+  const directShareExact = observationMs === 0 ? 0 : (directMs / observationMs) * 100;
+  const collaborativeInstructionShareExact = observationMs === 0
+    ? 0
+    : (collaborativeInstructionMs / observationMs) * 100;
+  const independentShareExact = observationMs === 0 ? 0 : (independentMs / observationMs) * 100;
+  const collaborationShareExact = observationMs === 0 ? 0 : (collaborationMs / observationMs) * 100;
+  const activeMode = TIMING_MODE_CONFIG.find(({ key }) => timingState.modes[key].running);
+  const totalSegments = TIMING_MODE_CONFIG.reduce(
+    (total, { key }) => total + timingState.modes[key].segments,
+    0
+  );
+  const segmentSummary =
+    `Direct: ${timingState.modes.direct.segments} | ` +
+    `Collaborative: ${timingState.modes.collaborativeInstruction.segments} | ` +
+    `Independent: ${timingState.modes.independent.segments} | ` +
+    `Independent / Group / Teacher Collaboration: ${timingState.modes.collaboration.segments}`;
+  const badgeText = activeMode
+    ? `${activeMode.label} live`
+    : timingState.observation.running
+      ? "Observation running"
+      : observationMs > 0
+        ? "Observation paused"
+        : "Ready to track";
+  const statusText = activeMode
+    ? activeMode.runningText
+    : timingState.observation.running
+      ? "Observation is running. Start a teaching mode or continue observing."
+      : observationMs > 0
+        ? "Observation is paused."
+        : "Start observation or a teaching mode to begin tracking.";
+
+  return {
+    observationMs,
+    observationSeconds: Math.round(observationMs / 1000),
+    observationTime: formatDuration(observationMs),
+    directMs,
+    directSeconds: Math.round(directMs / 1000),
+    directTime: formatDuration(directMs),
+    directShare: Math.round(directShareExact),
+    directShareExact,
+    collaborativeInstructionMs,
+    collaborativeInstructionSeconds: Math.round(collaborativeInstructionMs / 1000),
+    collaborativeInstructionTime: formatDuration(collaborativeInstructionMs),
+    collaborativeInstructionShare: Math.round(collaborativeInstructionShareExact),
+    collaborativeInstructionShareExact,
+    independentMs,
+    independentSeconds: Math.round(independentMs / 1000),
+    independentTime: formatDuration(independentMs),
+    independentShare: Math.round(independentShareExact),
+    independentShareExact,
+    collaborationMs,
+    collaborationSeconds: Math.round(collaborationMs / 1000),
+    collaborationTime: formatDuration(collaborationMs),
+    collaborationShare: Math.round(collaborationShareExact),
+    collaborationShareExact,
+    directSegments: timingState.modes.direct.segments,
+    collaborativeInstructionSegments: timingState.modes.collaborativeInstruction.segments,
+    independentSegments: timingState.modes.independent.segments,
+    collaborationSegments: timingState.modes.collaboration.segments,
+    totalSegments,
+    activeModeLabel: activeMode
+      ? activeMode.label
+      : timingState.observation.running
+        ? "Observation only"
+        : "No active mode",
+    badgeText,
+    statusText,
+    segmentSummary
+  };
+}
+
+function renderTimingState(now = Date.now()) {
+  const snapshot = getTimingSnapshot(now);
+
+  if (observationToggle) {
+    observationToggle.textContent = timingState.observation.running
+      ? "Pause Observation"
+      : "Start Observation";
+    observationToggle.classList.toggle("running", timingState.observation.running);
+  }
+
+  if (observationTime) {
+    observationTime.textContent = snapshot.observationTime;
+  }
+
+  TIMING_MODE_CONFIG.forEach((config) => {
+    const bucket = timingState.modes[config.key];
+
+    if (config.button) {
+      config.button.textContent = bucket.running ? config.pauseLabel : config.startLabel;
+      config.button.classList.toggle("running", bucket.running);
+    }
+
+    if (config.timeEl) {
+      config.timeEl.textContent = snapshot[config.timeProp];
+    }
+
+    if (config.shareEl) {
+      config.shareEl.textContent = `${snapshot[config.shareProp]}%`;
+    }
+  });
+
+  let cursor = 0;
+  TIMING_MODE_CONFIG.forEach((config) => {
+    if (!config.progressEl) {
+      return;
+    }
+
+    const width = clampPercent(snapshot[config.exactShareProp]);
+    config.progressEl.style.left = `${clampPercent(cursor)}%`;
+    config.progressEl.style.width = `${width}%`;
+    cursor += width;
+  });
+
+  if (instructionStatus) {
+    instructionStatus.textContent = snapshot.statusText;
+  }
+
+  if (segmentCount) {
+    segmentCount.textContent = snapshot.segmentSummary;
+  }
+
+  updateDashboard(now);
+}
+
+function clampPercent(value) {
+  return Math.max(0, Math.min(100, value));
+}

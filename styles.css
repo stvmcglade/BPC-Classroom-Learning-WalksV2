@@ -152,6 +152,17 @@ body::before {
   min-width: 0;
 }
 
+.form-split-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.95fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.form-split-row > .card {
+  margin-bottom: 0;
+}
+
 .summary-panel {
   display: grid;
   gap: 18px;
@@ -316,6 +327,159 @@ textarea {
 
 .practice-notes {
   margin-top: 12px;
+}
+
+.practice-extra {
+  margin-top: 14px;
+}
+
+.card--timing {
+  overflow: hidden;
+}
+
+.mode-definitions {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+}
+
+.mode-definitions p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.mode-definitions strong {
+  color: var(--text);
+}
+
+.timing-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.button--timing {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.button--timing.running {
+  color: #071019;
+}
+
+.button--timing.button--ghost.running {
+  border-color: transparent;
+}
+
+.button--observation.running {
+  background: linear-gradient(135deg, #e4b16b, #bf8445);
+  color: #161006;
+}
+
+.button--direct.running {
+  background: linear-gradient(135deg, #8fddb1, #58b77e);
+}
+
+.button--collaborative.running {
+  background: linear-gradient(135deg, #7ce4d6, #33bea7);
+}
+
+.button--independent.running {
+  background: linear-gradient(135deg, #73d5f8, #34a7d4);
+}
+
+.button--collaboration.running {
+  background: linear-gradient(135deg, #f4c675, #d99238);
+}
+
+.timing-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.timing-card {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-soft);
+}
+
+.timing-card--highlight {
+  background: linear-gradient(135deg, rgba(127, 198, 164, 0.16), rgba(18, 31, 44, 0.92));
+}
+
+.timing-card p,
+.timing-copy {
+  margin: 0;
+}
+
+.timing-card p {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.timing-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(1.15rem, 1.7vw, 1.55rem);
+  line-height: 1.1;
+}
+
+.timing-progress-track {
+  position: relative;
+  margin-top: 18px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.timing-progress {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  transition: width 180ms ease, left 180ms ease;
+}
+
+.timing-progress--direct {
+  left: 0;
+  background: linear-gradient(90deg, #8fddb1, #58b77e);
+}
+
+.timing-progress--collaborative {
+  background: linear-gradient(90deg, #7ce4d6, #33bea7);
+}
+
+.timing-progress--independent {
+  background: linear-gradient(90deg, #73d5f8, #34a7d4);
+}
+
+.timing-progress--collaboration {
+  background: linear-gradient(90deg, #f4c675, #d99238);
+}
+
+.timing-meta {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.timing-copy {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 .export-status {
@@ -582,6 +746,61 @@ textarea {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.timing-visuals {
+  display: grid;
+  gap: 16px;
+}
+
+.timing-visuals__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.timing-stats {
+  margin-top: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.timing-share-track {
+  display: flex;
+  height: 16px;
+  margin: 16px 0 18px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.timing-share-fill {
+  height: 100%;
+}
+
+.timing-fill--direct {
+  background: linear-gradient(90deg, #76c29e, #4f9375);
+}
+
+.timing-fill--collaborative {
+  background: linear-gradient(90deg, #7ce4d6, #33bea7);
+}
+
+.timing-fill--independent {
+  background: linear-gradient(90deg, #73d5f8, #34a7d4);
+}
+
+.timing-fill--collaboration {
+  background: linear-gradient(90deg, #f4c675, #d99238);
+}
+
+.timing-mode-chart {
+  margin-top: 4px;
+}
+
+.timing-mode-meta {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .section-visuals {
