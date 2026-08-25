@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Classroom Learning Walks</title>
+  <title>Classroom Learning Walks - OTR</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="hero__brand">
         <img class="hero__logo" src="BPC-logo-WordMarkWHITEcond.png" alt="BPC logo">
         <div class="hero__content">
-          <h1>Classroom Learning Walks</h1>
+          <h1>Classroom Learning Walks - OTR</h1>
           <p class="hero__focus">
             First 15 minutes of class to check on entry classroom routines.
           </p>
@@ -36,10 +36,6 @@
               <label class="field">
                 <span>Observer</span>
                 <input id="observer" name="observer" type="text" placeholder="Person completing the walk">
-              </label>
-              <label class="field">
-                <span>Teacher observed</span>
-                <input id="teacher" name="teacher" type="text" placeholder="Teacher name">
               </label>
               <label class="field">
                 <span>Date</span>
@@ -127,8 +123,8 @@
           </div>
 
           <div class="mode-definitions" aria-label="Teaching mode definitions">
-            <p><strong>Direct Instruction</strong> - Teacher is instructing to the whole class.</p>
-            <p><strong>Collaborative Instruction</strong> - Teacher is engaging the whole class and actively seeking responses.</p>
+            <p><strong>Direct Instruction</strong> - Teacher is instructing the whole class.</p>
+            <p><strong>Co-Construction</strong> - Teacher is facilitating individual and whole-class opportunities to engage in instruction and respond.</p>
             <p><strong>Independent Work</strong> - Students are working on assigned tasks without teacher involvement.</p>
             <p><strong>Independent Work / Group Work / Teacher Collaboration</strong> - Students are working independently or in groups while the teacher monitors, conferences, and assists.</p>
           </div>
@@ -136,7 +132,7 @@
           <div class="timing-actions">
             <button id="observationToggle" class="button button--ghost button--timing button--observation" type="button">Start Observation</button>
             <button id="directInstructionToggle" class="button button--ghost button--timing button--direct" type="button">Start Direct Instruction</button>
-            <button id="collaborativeInstructionToggle" class="button button--ghost button--timing button--collaborative" type="button">Start Collaborative Instruction</button>
+            <button id="collaborativeInstructionToggle" class="button button--ghost button--timing button--collaborative" type="button">Start Co-Construction</button>
             <button id="independentWorkToggle" class="button button--ghost button--timing button--independent" type="button">Start Independent Work</button>
             <button id="collaborationToggle" class="button button--ghost button--timing button--collaboration" type="button">Start Independent Work / Group Work / Teacher Collaboration</button>
           </div>
@@ -152,7 +148,7 @@
               <span id="directInstructionShare" class="metric-detail">0%</span>
             </article>
             <article class="timing-card">
-              <p>Collaborative Instruction</p>
+              <p>Co-Construction</p>
               <strong id="collaborativeInstructionTime">00:00:00</strong>
               <span id="collaborativeInstructionShare" class="metric-detail">0%</span>
             </article>

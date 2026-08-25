@@ -78,7 +78,7 @@ const TIMING_MODE_CONFIG = [
   },
   {
     key: "collaborativeInstruction",
-    label: "Collaborative Instruction",
+    label: "Co-Construction",
     button: collaborativeInstructionToggle,
     timeEl: collaborativeInstructionTime,
     shareEl: collaborativeInstructionShare,
@@ -86,9 +86,9 @@ const TIMING_MODE_CONFIG = [
     timeProp: "collaborativeInstructionTime",
     shareProp: "collaborativeInstructionShare",
     exactShareProp: "collaborativeInstructionShareExact",
-    startLabel: "Start Collaborative Instruction",
-    pauseLabel: "Pause Collaborative Instruction",
-    runningText: "Collaborative instruction is running right now."
+    startLabel: "Start Co-Construction",
+    pauseLabel: "Pause Co-Construction",
+    runningText: "Co-Construction is running right now."
   },
   {
     key: "independent",
@@ -239,7 +239,7 @@ function collectFormData(now = Date.now()) {
     id: crypto.randomUUID(),
     savedAt: new Date().toISOString(),
     observer: formData.get("observer") || "",
-    teacher: formData.get("teacher") || "",
+    teacher: "",
     date: formData.get("date") || "",
     subject: formData.get("subject") || "",
     lessonSegment: formData.get("lessonSegment") || "Beginning",

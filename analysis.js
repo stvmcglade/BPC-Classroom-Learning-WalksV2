@@ -13,7 +13,7 @@ const TIMING_MODE_ORDER = [
   },
   {
     key: "collaborativeInstruction",
-    label: "Collaborative Instruction",
+    label: "Co-Construction",
     timeField: "collaborativeInstructionTime",
     secondsField: "collaborativeInstructionSeconds",
     shareField: "collaborativeInstructionShare",
