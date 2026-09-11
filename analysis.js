@@ -175,6 +175,7 @@ const fileInput = document.querySelector("#csv-files");
 const clearButton = document.querySelector("#clear-analysis");
 const downloadPdfButton = document.querySelector("#download-pdf");
 const uploadStatus = document.querySelector("#upload-status");
+const uploadedFiles = document.querySelector("#uploaded-files");
 const reportMeta = document.querySelector("#report-meta");
 const analysisStats = document.querySelector("#analysis-stats");
 const timingVisuals = document.querySelector("#timing-visuals");
@@ -183,6 +184,7 @@ const indicatorInsights = document.querySelector("#indicator-insights");
 const commentTrends = document.querySelector("#comment-trends");
 const reflectionComments = document.querySelector("#reflection-comments");
 let currentAnalysis = null;
+let uploadVersion = 0;
 
 fileInput.addEventListener("change", handleFileUpload);
 clearButton.addEventListener("click", resetAnalysis);
@@ -197,6 +199,8 @@ async function handleFileUpload(event) {
     return;
   }
 
+  clearAnalysisResults();
+  const version = uploadVersion;
   uploadStatus.textContent = `Loading ${files.length} file${files.length === 1 ? "" : "s"}...`;
 
   try {
@@ -207,10 +211,13 @@ async function handleFileUpload(event) {
       }))
     );
 
-    const combinedRows = filePayloads.flatMap(({ fileName, rows }) =>
+    if (version !== uploadVersion) return;
+
+    const combinedRows = filePayloads.flatMap(({ fileName, rows }, fileIndex) =>
       rows.map((row) => ({
         ...row,
-        sourceFile: fileName
+        sourceFile: fileName,
+        sourceFileIndex: fileIndex
       }))
     );
 
@@ -223,14 +230,35 @@ async function handleFileUpload(event) {
     const analysis = buildAnalysis(cleanRows, files.length);
     currentAnalysis = analysis;
     renderAnalysis(analysis);
+    uploadedFiles.innerHTML = filePayloads.map(({ fileName, rows }) => {
+      const count = rows.filter((row) => row.practiceTitle && row.indicatorText).length;
+      return `<li>${escapeHtml(fileName)}: ${count} indicator rows${count ? "" : " (no analysable data)"}</li>`;
+    }).join("");
+    uploadedFiles.hidden = false;
+    downloadPdfButton.disabled = false;
     uploadStatus.textContent =
       `Loaded ${analysis.fileCount} file${analysis.fileCount === 1 ? "" : "s"} with ` +
       `${analysis.walkthroughCount} walkthrough${analysis.walkthroughCount === 1 ? "" : "s"} and ` +
       `${analysis.rowCount} indicator rows.`;
   } catch (error) {
+    if (version !== uploadVersion) return;
     resetAnalysis();
     uploadStatus.textContent = error.message || "Unable to read the uploaded files.";
   }
+}
+
+function getWalkthroughKey(row) {
+  const sourceFile = row.sourceFileIndex ?? row.sourceFile ?? "";
+  const recordId = (row.recordId || "").trim();
+  // IDs can repeat across exports; group indicator rows within their uploaded file.
+  if (recordId) return JSON.stringify(["record", sourceFile, recordId]);
+
+  // Legacy exports lack IDs; all indicator rows from the same visit share this metadata.
+  return JSON.stringify([
+    "legacy", sourceFile,
+    ...["savedAt", "walkDate", "observer", "teacherObserved", "className", "subject", "classroom", "lessonSegment"]
+      .map((field) => (row[field] || "").trim())
+  ]);
 }
 
 function buildAnalysis(rows, fileCount) {
@@ -241,7 +269,7 @@ function buildAnalysis(rows, fileCount) {
   const walkthroughSet = new Set();
   const walkthroughTimingMap = new Map();
 
-  rows.forEach((row, index) => {
+  rows.forEach((row) => {
     if (row.observer) {
       observerSet.add(row.observer);
     }
@@ -249,9 +277,7 @@ function buildAnalysis(rows, fileCount) {
       teacherSet.add(row.teacherObserved);
     }
 
-    const walkthroughKey =
-      row.recordId ||
-      [row.walkDate, row.observer, row.teacherObserved, row.className, row.sourceFile, index].join("|");
+    const walkthroughKey = getWalkthroughKey(row);
     walkthroughSet.add(walkthroughKey);
 
     if (!walkthroughTimingMap.has(walkthroughKey)) {
@@ -921,10 +947,18 @@ function mapCountsToRankedList(countMap, limit) {
 }
 
 function resetAnalysis() {
-  currentAnalysis = null;
   if (fileInput) {
     fileInput.value = "";
   }
+  clearAnalysisResults();
+}
+
+function clearAnalysisResults() {
+  uploadVersion += 1;
+  currentAnalysis = null;
+  downloadPdfButton.disabled = true;
+  uploadedFiles.innerHTML = "";
+  uploadedFiles.hidden = true;
   uploadStatus.textContent = "No files uploaded yet.";
   reportMeta.innerHTML =
     '<p class="empty-state">Upload data to prepare a report summary for PDF export.</p>';
@@ -1029,26 +1063,6 @@ function renderPdfSummaryPage(pdf, analysis) {
   ];
   top = renderPdfStatGrid(pdf, metaCards, margin, top, pageWidth, 4, 72);
   top += 12;
-
-  pdf.drawText("Combined dataset snapshot", margin, top, {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: [16, 23, 32]
-  });
-  top += 18;
-
-  const overviewCards = [
-    { label: "Files uploaded", value: String(analysis.fileCount) },
-    { label: "Walkthroughs combined", value: String(analysis.walkthroughCount) },
-    { label: "Observers", value: String(analysis.observerCount) },
-    { label: "Teachers observed", value: String(analysis.teacherCount) },
-    { label: "Indicator rows", value: String(analysis.rowCount) },
-    { label: "Observed", value: String(analysis.overallObserved) },
-    { label: "Unticked", value: String(analysis.overallUnticked) },
-    { label: "Sections analysed", value: String(analysis.sectionCount) }
-  ];
-  top = renderPdfStatGrid(pdf, overviewCards, margin, top, pageWidth, 4, 64);
-  top += 14;
 
   pdf.drawText("Section snapshots", margin, top, {
     fontSize: 14,
